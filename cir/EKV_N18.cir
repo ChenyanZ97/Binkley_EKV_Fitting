@@ -1,7 +1,0 @@
-EKV_N18
-.source V1
-.param C_s=1p C_t=0.5p R_t=5k f_L_R=10
-.detector V_out
-V1 in 0 V value=0 noise=0 dc=0 dcvar=0
-X1 in 0 out NM18_noise ID={ID} IG={IG} W={W} L={L}
-.end

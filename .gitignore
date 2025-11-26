@@ -1,20 +1,12 @@
-# macOS
-.DS_Store
+# Ignore everything by default
+*
 
-# Log and output files
-*.log
-*.out
+# But keep these files
+!.gitignore
+!lib/SLiCAP_C18.lib
+!lib/SLiCAP1.lib
+!cir/MOS_OP_I.cir
+!test.ipynb
 
-# Jupyter notebook cache
-.ipynb_checkpoints
-test.ipynb.zip
-
-# SLiCAP generated files
-/csv/
-/html/
-/img/
-/tex/SLiCAPdata/
-/sphinx/SLiCAPdata/
-MOS_OP.cir
-MOS_OP.log
-MOS_OP.out
+# And don't ignore directories, so we can traverse them
+!*/

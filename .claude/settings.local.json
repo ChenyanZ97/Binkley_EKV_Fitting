@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/liuyubing/TUDelft/BSIM2EKVnb/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

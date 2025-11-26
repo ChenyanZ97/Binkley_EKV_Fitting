@@ -1,0 +1,178 @@
+V1 2 0 dc 0
+V2 s2 0 dc {VS}
+V3 d2 0 dc {VD}
+V4 b2 0 dc {VB}
+
+.ac lin 1 {freq} {freq}
+
+.options filetype=ascii
+
+.csparam freq   = {freq}
+.csparam start  = {start}
+.csparam delta  = {delta}
+.csparam num    = {num}
+
+.control
+* ========== Binary search parameters ==========
+let vg_min = 0.0
+let vg_max = 1.8
+let id_tolerance = 1e-12
+let max_iterations = 50
+
+* ========== Initialize result vectors ==========
+let Cgg    = vector(num)
+let Cgs    = vector(num)
+let Cgd    = vector(num)
+let Cgb    = vector(num)
+let ggd    = vector(num)
+let Css    = vector(num)
+let Csg    = vector(num)
+let Csb    = vector(num)
+let Csd    = vector(num)
+let Cdd    = vector(num)
+let Cdg    = vector(num)
+let Cdb    = vector(num)
+let Cds    = vector(num)
+let gdd    = vector(num)
+let gss    = vector(num)
+let Cbb    = vector(num)
+let Cbs    = vector(num)
+let Cbd    = vector(num)
+let Cbg    = vector(num)
+let gbd    = vector(num)
+let vgs    = vector(num)
+let ids    = vector(num)
+let gds    = vector(num)
+let vn1    = vector(num)
+let vn3    = vector(num)
+let vg_solved = vector(num)
+
+* ========== Main loop: Complete analysis for each ID point ==========
+let ID  = start
+let idx = 0
+
+repeat $&num
+  let target_id = ID
+  * ==================== Binary search for VG ====================
+  let vg_low = vg_min
+  let vg_high = vg_max
+  let iteration = 0
+
+  while iteration < max_iterations
+    let iteration = iteration + 1
+    let vg_mid = (vg_low + vg_high) / 2
+    alter VGG dc = vg_mid
+    op
+    let id_current = @M1_OP[id]
+    let id_error = id_current - target_id
+    let id_error_abs = abs(id_error)
+
+    if id_error_abs < id_tolerance
+      break
+    end
+
+    if id_error > 0
+      let vg_high = vg_mid
+    else
+      let vg_low = vg_mid
+    end
+
+    if (vg_high - vg_low) < id_tolerance
+      break
+    end
+  end
+
+  let vg_solved[idx] = vg_mid
+
+  alter @V1[ac] = [ 1 0 ]
+  alter @V2[ac] = [ 0 0 ]
+  alter @V3[ac] = [ 0 0 ]
+  alter @V4[ac] = [ 0 0 ]
+  alter VGG dc = vg_mid
+  run
+  let Cgg[idx]  = -imag(V1#branch)/(2*PI*freq)
+  let Cgs[idx]  = imag(V2#branch)/(2*PI*freq)
+  let Cgd[idx]  = imag(V3#branch)/(2*PI*freq)
+  let Cgb[idx]  = imag(V4#branch)/(2*PI*freq)
+  let ggd[idx]  = -real(V3#branch)
+  let vgs[idx]  = @M1_OP[vgs]
+
+  * ==================== Analysis 2: OP Analysis ====================
+  alter VGG dc = vg_mid
+  op
+  let ids[idx] = @M1_OP[id]
+  let gds[idx] = @M1_OP[gds]
+  let vn1[idx] = v(d1)
+  let vn3[idx] = v(d2)
+
+  * ==================== Analysis 3: AC Source Excitation ====================
+  alter @V1[ac] = [ 0 0 ]
+  alter @V2[ac] = [ 1 0 ]
+  alter @V3[ac] = [ 0 0 ]
+  alter @V4[ac] = [ 0 0 ]
+  alter VGG dc = vg_mid
+  run
+  let Css[idx]  = -imag(V2#branch)/(2*PI*freq)
+  let Csg[idx]  = imag(V1#branch)/(2*PI*freq)
+  let Csb[idx]  = imag(V4#branch)/(2*PI*freq)
+  let Csd[idx]  = imag(V3#branch)/(2*PI*freq)
+  let gss[idx]  = -real(V2#branch)
+
+  * ==================== Analysis 4: AC Drain Excitation ====================
+  alter @V1[ac] = [ 0 0 ]
+  alter @V2[ac] = [ 0 0 ]
+  alter @V3[ac] = [ 1 0 ]
+  alter @V4[ac] = [ 0 0 ]
+  alter VGG dc = vg_mid
+  run
+  let Cdd[idx]  = -imag(V3#branch)/(2*PI*freq)
+  let Cdg[idx]  = imag(V1#branch)/(2*PI*freq)
+  let Cdb[idx]  = imag(V4#branch)/(2*PI*freq)
+  let Cds[idx]  = imag(V2#branch)/(2*PI*freq)
+  let gdd[idx]  = -real(V3#branch)
+
+  * ==================== Analysis 5: AC Bulk Excitation ====================
+  alter @V1[ac] = [ 0 0 ]
+  alter @V2[ac] = [ 0 0 ]
+  alter @V3[ac] = [ 0 0 ]
+  alter @V4[ac] = [ 1 0 ]
+  alter VGG dc = vg_mid
+  run
+  let Cbb[idx]  = -imag(V4#branch)/(2*PI*freq)
+  let Cbs[idx]  = imag(V2#branch)/(2*PI*freq)
+  let Cbd[idx]  = imag(V3#branch)/(2*PI*freq)
+  let Cbg[idx]  = imag(V1#branch)/(2*PI*freq)
+  let gbd[idx]  = -real(V3#branch)
+  let ID = ID + delta
+  let idx = idx + 1
+end
+
+settype current ids
+settype voltage vgs
+settype voltage vg_solved
+settype admittance ggd
+settype capacitance Cgg
+settype capacitance Cgs
+settype capacitance Cgd
+settype capacitance Cgb
+settype admittance gss
+settype capacitance Css
+settype capacitance Csg
+settype capacitance Csb
+settype capacitance Csd
+settype admittance gdd
+settype capacitance Cdd
+settype capacitance Cdg
+settype capacitance Cdb
+settype capacitance Cds
+settype admittance gbd
+settype capacitance Cbb
+settype capacitance Cbs
+settype capacitance Cbd
+settype capacitance Cbg
+settype admittance gds
+
+write MOS_OP.out vgs Cgg Cgs Cgd Cgb ggd Css Csg Csb Csd gss Cdd Cdg Cdb Cds gdd Cbb Cbs Cbd Cbg gbd ids gds
+
+.endc
+.end

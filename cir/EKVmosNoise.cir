@@ -1,0 +1,5 @@
+CMOS_noise
+.lib SLiCAP.lib
+X1 in 0 out  PM18_noise W={W} L={L} ID={I_D}
+V1 in 0 1
+.end

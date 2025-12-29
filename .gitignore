@@ -7,6 +7,9 @@
 !lib/SLiCAP1.lib
 !cir/MOS_OP_I.cir
 !test.ipynb
+!fitting.py
+!generate_lib.py
+!compare_libraries.py
 
 # And don't ignore directories, so we can traverse them
 !*/
